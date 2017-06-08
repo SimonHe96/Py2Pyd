@@ -16,10 +16,10 @@ def func(path):
     '''
     for pt, ds, fs in os.walk(path):
 
-        #-
+        #- make current dir to this folder
         os.chdir(pt)
 
-        #-
+        #- build each python file
         for f in fs:
             if not re.search('\.py$',  f):
                 continue
@@ -33,24 +33,25 @@ def func(path):
             if re.search('_rc.py',     f):
                 continue
 
-            #-
+            #- Copy python file to build tag
             origin_name = os.path.splitext(f)[0]
             build_name  = '{0}_{1}'.format(origin_name, PYD_POST_FIX)
             build_file  = '{0}.py'.format(build_name)
-
             shutil.copy(f, build_file)
-            #-
+
+            #- build pyd
             extensions = [Extension(build_name, [ build_file ], include_dirs=[])]
             setup(name=build_name, ext_modules=cythonize(extensions))
 
-            #- clean up
+            #- clean up delete unused files
             for ext in ('c', 'py', 'pyc'):
                 delete_file = '{0}.{1}'.format(build_name, ext)
                 os.path.isfile(delete_file) and os.remove(delete_file)
 
             os.path.isfile('{0}.pyc'.format(origin_name)) and os.remove('{0}.pyc'.format(origin_name))
 
-            #-
+            #- make py and pyd relative
+            shutil.copy(f, f+'1')
             with open(f, 'w') as fw:
                 fw.write('from {0} import *'.format(build_name))
 
